@@ -45,3 +45,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+*.zip
+*.csv
+bts-db1b/readme.html
+*.pdf
+.ipynb_checkpoints/explore-checkpoint.ipynb
