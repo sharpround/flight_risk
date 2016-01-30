@@ -50,3 +50,5 @@ Temporary Items
 bts-db1b/readme.html
 *.pdf
 .ipynb_checkpoints/explore-checkpoint.ipynb
+.ipynb_checkpoints/cancel_predict-checkpoint.ipynb
+.ipynb_checkpoints/cancel_predict-checkpoint.ipynb

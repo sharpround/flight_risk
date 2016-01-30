@@ -22,6 +22,12 @@ Can we think of the airline flight delays as a market? And each carrier performs
 We want to do probabilistic classification (discrete choice, binomial regression). Options: naive bayes, logistic regression, neural net. (Others possibly, e.g. SVM). Start w/ logistic, because it is the easiest to interpret. Then random forest, just to see what we get out.
 
 
+The good standard of a model  would be to backtest it on previous customers to see which made the best predictions.
+
+Could we use a decision tree or a random forest as a clustering algorithm? (actually, I am not sure that we could use a random forest)
+
+Also, need to keep in mind that even smaller delays matter, because they could cause a missed connection.
+
 questions:
 Why are flights delayed?
 Are flights delayed more often in morning or afternoon?
