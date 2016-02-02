@@ -41,6 +41,11 @@ How do we add weather into that?
 Can we use this data to identify "low-performing" planes?
 
 
+Reasons for delay start in 2003-06.
+
+Reasons for gate return starts in 2008-10
+
+
 todo:
 stuff the data into a database
 
