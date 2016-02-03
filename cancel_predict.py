@@ -83,7 +83,8 @@ def get_continuous_vars():
     continuous_vars = ["CRSElapsedTime",
                        "Distance",
                        "CRSDepTime",
-                       "CRSArrTime"]
+                       "CRSArrTime",
+                       "OrdinalDate"]
     return continuous_vars
 
 
@@ -92,7 +93,7 @@ def read_all_csv(filenames, usecols=None, dtype_dict=None, verbose=False, frac=1
 
     if type(filenames) is not list:
         print("function read_all_csv requires the input to be a list of filenames")
-        return None # TODO: return appropriate error message
+        return None # TODO: return appropriate exception/error
 
     df = pd.DataFrame()
     for fname in filenames:
@@ -136,6 +137,12 @@ def make_day_of_year_feature(df, column_name):
 
 
 
+def make_ordinal_date_feature(df, column_name):
+    df["OrdinalDate"] = df[column_name].apply(lambda x: x.toordinal())
+    return df
+
+
+
 def transform_date_feature(df, column_name, format="%Y-%m-%d"):
     df[column_name] = pd.to_datetime(df[column_name], format=format)
     return df
@@ -175,7 +182,7 @@ def main():
     filenames = get_filenames(ONTIME_PATH)
     usecols = get_data_columns()
 
-    filenames = filenames[48:60]
+    filenames = filenames[48:49]
 
     print("files to load: " + str(filenames))
     print("columns to import: " + str(usecols))
@@ -189,6 +196,7 @@ def main():
                       frac=0.1
                       )
 
+    print("Size of data set: " + str(len(df)))
 
     ### encode categorical features
 
@@ -199,7 +207,6 @@ def main():
         df, transformer = transform_categorical_feature(df, var)
         transformer_dict[var] = transformer
 
-    print(df.head())
     print("transformer: " + str(transformer_dict))
 
     ### make new features
@@ -209,6 +216,8 @@ def main():
     df = make_day_of_week_feature(df, "FlightDate")
 
     df = make_day_of_year_feature(df, "FlightDate")
+
+    df = make_ordinal_date_feature(df, "FlightDate")
 
     ### normalize features
 
