@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn import linear_model
 from sklearn import cross_validation
+from sklearn import ensemble
 from sklearn import metrics
 from os import listdir
 import pickle
@@ -398,16 +399,37 @@ def main():
     # X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, train_size=0.7)
     X_train, X_test, y_train, y_test = contiguous_train_test_split(X, y, train_size=0.7)
 
+    print(X_train.shape)
+    print(X_test.shape)
+    print(y_train.shape)
+    print(y_test.shape)
+
+    print("Training logistic regression classifier...")
 
     clf = linear_model.LogisticRegression(penalty='l2', verbose=True)
     clf.fit(X_train, y_train)
 
-    print("\nTest\n-----")
+    print("\nTest")
     y_pred = clf.predict_proba(X_test)
+    y_baseline = np.ones(y_test.shape) * (np.sum(y) / len(y))
+    print_metrics(y_test, y_pred[:, 1], y_baseline)
+
+    print("\nTrain")
+    y_pred = clf.predict_proba(X_train)
     y_baseline = np.ones(y_train.shape) * (np.sum(y) / len(y))
     print_metrics(y_train, y_pred[:, 1], y_baseline)
 
-    print("\nTrain\n-----")
+    print("Training random forest classifier....")
+
+    clf = ensemble.RandomForestClassifier(verbose=True, n_jobs=-1)
+    clf.fit(X_train, y_train)
+
+    print("\nTest")
+    y_pred = clf.predict_proba(X_test)
+    y_baseline = np.ones(y_test.shape) * (np.sum(y) / len(y))
+    print_metrics(y_test, y_pred[:, 1], y_baseline)
+
+    print("\nTrain")
     y_pred = clf.predict_proba(X_train)
     y_baseline = np.ones(y_train.shape) * (np.sum(y) / len(y))
     print_metrics(y_train, y_pred[:, 1], y_baseline)
