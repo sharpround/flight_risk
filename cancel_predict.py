@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
-from sklearn import linear_model
-from sklearn import cross_validation
+# from sklearn import linear_model
+# from sklearn import cross_validation
 from sklearn import metrics
 from os import listdir
+import pickle
 
 ONTIME_PATH = "on_time/"
 TICKET_PATH = "bts-db1b/DB1B/"
@@ -25,9 +26,9 @@ def get_dtype_dict():
                    "DestAirportSeqID": np.uint,
                    "DestCityMarketID": np.uint,
                    "DestState": np.str,
-                   "CRSDepTime": np.uint,
+                   "CRSDepTime": np.float,
                    "DepTimeBlk": np.str,
-                   "CRSArrTime": np.uint,
+                   "CRSArrTime": np.float,
                    "ArrTimeBlk": np.str,
                    "CRSElapsedTime": np.float,
                    "Distance": np.float,
@@ -84,8 +85,38 @@ def get_continuous_vars():
                        "Distance",
                        "CRSDepTime",
                        "CRSArrTime",
-                       "OrdinalDate"]
+                       "OrdinalDate",
+                       "WeekDay",
+                       "YearDay"]
     return continuous_vars
+
+
+def get_feature_variables():
+    feature_vars = ["CRSElapsedTime",
+                    "Distance",
+                    "CRSDepTime",
+                    "CRSArrTime",
+                    "UniqueCarrier",
+                    "OriginAirportID",
+                    "OriginAirportSeqID",
+                    "OriginCityMarketID",
+                    "OriginState",
+                    "DestAirportID",
+                    "DestAirportSeqID",
+                    "DestCityMarketID",
+                    "DepTimeBlk",
+                    "ArrTimeBlk",
+                    "DistanceGroup",
+                    "DestState",
+                    "Cancelled",
+                    "CancellationCode",
+                    "WeekDay",
+                    "YearDay"]
+    return feature_vars
+
+
+def get_target_column():
+    pass
 
 
 
@@ -125,14 +156,14 @@ def transform_categorical_feature(df, column_name):
 
 def make_day_of_week_feature(df, column_name):
     df["WeekDay"] = df[column_name].apply(lambda x: x.timetuple().tm_wday)
-    df["WeekDay"] = df["WeekDay"] / 6.0
+    # df["WeekDay"] = df["WeekDay"] / 6.0
     return df
 
 
 
 def make_day_of_year_feature(df, column_name):
     df["YearDay"] = df[column_name].apply(lambda x: x.timetuple().tm_yday)
-    df["YearDay"] = df["YearDay"] / 365.25
+    # df["YearDay"] = df["YearDay"] / 365.25
     return df
 
 
@@ -149,10 +180,10 @@ def transform_date_feature(df, column_name, format="%Y-%m-%d"):
 
 
 
-def normalize_continuous_feature(df, column_name, from_range=None, to_range=(0, 1)):
-    minval = df[column_name].min()
-    maxval = df[column_name].max()
-    df[column_name] = (df[column_name] - minval) / (maxval - minval)
+def normalize_continuous_feature(df, column_name):
+    meanval = df[column_name].mean()
+    stdval = df[column_name].std()
+    df[column_name] = (df[column_name] - meanval) / stdval
     return df
 
 
@@ -175,28 +206,30 @@ def record_to_features(filename):
     return X, X_headers
 
 
+def contiguous_train_test_split(X, y, on_feature=0, train_size=None, test_size=None):
+    pass
 
-def main():
+
+def preprocess_ontime_data(verbose=True):
     ### load data
 
     filenames = get_filenames(ONTIME_PATH)
     usecols = get_data_columns()
 
-    filenames = filenames[48:49]
+    # filenames = ["On_Time_On_Time_Performance_2012_7.csv"]
 
-    print("files to load: " + str(filenames))
-    print("columns to import: " + str(usecols))
-
-    # test_file = "on_time/On_Time_On_Time_Performance_2013_11.csv"
+    if verbose:
+        print("files to load: " + str(filenames))
+        print("columns to import: " + str(usecols))
 
     df = read_all_csv(filenames,
                       usecols=usecols,
                       dtype_dict=get_dtype_dict(),
-                      verbose=True,
-                      frac=0.1
+                      verbose=verbose,
+                      frac=0.01
                       )
-
-    print("Size of data set: " + str(len(df)))
+    if verbose:
+        print("Size of data set: " + str(len(df)))
 
     ### encode categorical features
 
@@ -207,7 +240,8 @@ def main():
         df, transformer = transform_categorical_feature(df, var)
         transformer_dict[var] = transformer
 
-    print("transformer: " + str(transformer_dict))
+    if verbose:
+        print("transformer: " + str(transformer_dict))
 
     ### make new features
 
@@ -219,13 +253,23 @@ def main():
 
     df = make_ordinal_date_feature(df, "FlightDate")
 
-    ### normalize features
+    ### normalize features to mean = 0, std = 1
 
     continuous_vars = get_continuous_vars()
     for var in continuous_vars:
         df = normalize_continuous_feature(df, var)
 
-    print(df.head())
+    return df, transformer_dict
+
+
+def main():
+    df, transformer_dict = preprocess_ontime_data()
+
+    pickle.dump(df, open("ontime_sample_01.pickle", "wb"))
+    pickle.dump(transformer_dict, open("transformer_dict_01.pickle", "wb"))
+
+
+    print("program complete")
 
 
 if __name__ == '__main__':
