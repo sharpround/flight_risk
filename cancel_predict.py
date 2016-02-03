@@ -208,8 +208,41 @@ def record_to_features(filename):
     return X, X_headers
 
 
-def contiguous_train_test_split(X, y, on_feature=0, train_size=None, test_size=None):
-    pass
+def contiguous_train_test_split(X, y, train_size):
+
+    N = len(y)
+    N_train = np.int(N*train_size)
+
+    start_train = np.random.randint(N)
+    end_train = start_train + N_train
+
+
+    if end_train <= N:
+        print("start: " + str(start_train))
+        print("end: " + str(end_train))
+        print("total: " + str(N))
+        X_train = X[start_train:end_train, :]
+        y_train = y[start_train:end_train]
+        
+        X1 = X[:start_train, :]
+        X2 = X[end_train:, :]
+        X_test = sparse.vstack((X1, X2))
+        y_test = np.r_[y[:start_train], y[end_train:]]
+
+    else:
+        end_train = end_train - N
+        print("start: " + str(start_train))
+        print("end: " + str(end_train))
+        print("total: " + str(N))
+        X1 = X[:end_train, :]
+        X2 = X[start_train:, :]
+        X_train = sparse.vstack((X1, X2))
+        y_train = np.r_[y[:end_train], y[start_train:]]
+
+        X_test = X[end_train:start_train, :]
+        y_test = y[end_train:start_train]
+
+    return X_train, X_test, y_train, y_test
 
 
 def preprocess_ontime_data(verbose=True):
@@ -298,6 +331,7 @@ def vectorize_data(df):
     X2 = Xenc.fit_transform(df[cat_vars].as_matrix())
 
     X = sparse.hstack((X1, X2))
+    X = X.tocsr()
 
     y = df["Cancelled"].as_matrix()
 
@@ -315,6 +349,8 @@ def main():
     df = pickle.load(open("ontime_sample_01.pickle", 'rb'))
     transformer_dict = pickle.load(open("transformer_dict_01.pickle", 'rb'))
 
+    df = df.sort_values(by="OrdinalDate")
+
     X, y = vectorize_data(df)
 
     print("X shape: " + str(X.shape))
@@ -322,15 +358,45 @@ def main():
 
     clf = linear_model.LogisticRegression(penalty='l2', verbose=True)
 
-    X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, train_size=0.7)
+    # X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, train_size=0.7)
+    X_train, X_test, y_train, y_test = contiguous_train_test_split(X, y, train_size=0.7)
 
     clf.fit(X_train, y_train)
 
     y_pred = clf.predict_proba(X_test)
 
-    score = metrics.log_loss(y_test, y_pred)
+    y_baseline = np.ones(y_test.shape) * (np.sum(y) / len(y))
 
-    print("log-loss score: " + str(score))
+    clf_score       = metrics.log_loss(y_test, y_pred)
+    baseline_score  = metrics.log_loss(y_test, y_baseline)
+    never_score     = metrics.log_loss(y_test, np.zeros(y_test.shape))
+    always_score    = metrics.log_loss(y_test, np.ones(y_test.shape))
+
+    print("log-loss score of classifier: "  + str(clf_score))
+    print("log-loss score of baseline: "    + str(baseline_score))
+    print("log-loss score of never: "       + str(never_score))
+    print("log-loss score of always: "      + str(always_score))
+
+    clf_score       = metrics.brier_score_loss(y_test, y_pred[:, 1])
+    baseline_score  = metrics.brier_score_loss(y_test, y_baseline)
+    never_score     = metrics.brier_score_loss(y_test, np.zeros(y_test.shape))
+    always_score    = metrics.brier_score_loss(y_test, np.ones(y_test.shape))
+
+    print("Brier loss of classifier: "  + str(clf_score))
+    print("Brier loss of baseline: "    + str(baseline_score))
+    print("Brier loss of never: "       + str(never_score))
+    print("Brier loss of always: "      + str(always_score))
+
+    clf_score       = metrics.roc_auc_score(y_test, y_pred[:, 1])
+    baseline_score  = metrics.roc_auc_score(y_test, y_baseline)
+    never_score     = metrics.roc_auc_score(y_test, np.zeros(y_test.shape))
+    always_score    = metrics.roc_auc_score(y_test, np.ones(y_test.shape))
+
+    print("ROC AUC of classifier: "  + str(clf_score))
+    print("ROC AUC score of baseline: "    + str(baseline_score))
+    print("ROC AUC score of never: "       + str(never_score))
+    print("ROC AUC score of always: "      + str(always_score))
+
 
     print("program complete")
 
