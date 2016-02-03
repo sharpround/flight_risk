@@ -208,6 +208,7 @@ def record_to_features(filename):
     return X, X_headers
 
 
+
 def contiguous_train_test_split(X, y, train_size):
 
     N = len(y)
@@ -223,7 +224,7 @@ def contiguous_train_test_split(X, y, train_size):
         print("total: " + str(N))
         X_train = X[start_train:end_train, :]
         y_train = y[start_train:end_train]
-        
+
         X1 = X[:start_train, :]
         X2 = X[end_train:, :]
         X_test = sparse.vstack((X1, X2))
@@ -339,6 +340,43 @@ def vectorize_data(df):
 
 
 
+def print_metrics(y_test, y_pred, y_baseline):
+
+    # clf_score       = metrics.log_loss(y_test, y_pred)
+    # baseline_score  = metrics.log_loss(y_test, y_baseline)
+    # never_score     = metrics.log_loss(y_test, np.zeros(y_test.shape))
+    # always_score    = metrics.log_loss(y_test, np.ones(y_test.shape))
+    #
+    # print("-----")
+    # print("log-loss score of classifier: "  + str(clf_score))
+    # print("log-loss score of baseline: "    + str(baseline_score))
+    # print("log-loss score of never: "       + str(never_score))
+    # print("log-loss score of always: "      + str(always_score))
+    #
+    # clf_score       = metrics.brier_score_loss(y_test, y_pred)
+    # baseline_score  = metrics.brier_score_loss(y_test, y_baseline)
+    # never_score     = metrics.brier_score_loss(y_test, np.zeros(y_test.shape))
+    # always_score    = metrics.brier_score_loss(y_test, np.ones(y_test.shape))
+    #
+    # print("-----")
+    # print("Brier loss of classifier: "  + str(clf_score))
+    # print("Brier loss of baseline: "    + str(baseline_score))
+    # print("Brier loss of never: "       + str(never_score))
+    # print("Brier loss of always: "      + str(always_score))
+
+    clf_score       = metrics.roc_auc_score(y_test, y_pred)
+    baseline_score  = metrics.roc_auc_score(y_test, y_baseline)
+    never_score     = metrics.roc_auc_score(y_test, np.zeros(y_test.shape))
+    always_score    = metrics.roc_auc_score(y_test, np.ones(y_test.shape))
+
+    print("-----")
+    print("ROC AUC of classifier: "     + str(clf_score))
+    print("ROC AUC score of baseline: " + str(baseline_score))
+    print("ROC AUC score of never: "    + str(never_score))
+    print("ROC AUC score of always: "   + str(always_score))
+
+
+
 def main():
     # df, transformer_dict = preprocess_ontime_data()
     #
@@ -356,46 +394,23 @@ def main():
     print("X shape: " + str(X.shape))
     print("y shape: " + str(y.shape))
 
-    clf = linear_model.LogisticRegression(penalty='l2', verbose=True)
 
     # X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, train_size=0.7)
     X_train, X_test, y_train, y_test = contiguous_train_test_split(X, y, train_size=0.7)
 
+
+    clf = linear_model.LogisticRegression(penalty='l2', verbose=True)
     clf.fit(X_train, y_train)
 
+    print("\nTest\n-----")
     y_pred = clf.predict_proba(X_test)
+    y_baseline = np.ones(y_train.shape) * (np.sum(y) / len(y))
+    print_metrics(y_train, y_pred[:, 1], y_baseline)
 
-    y_baseline = np.ones(y_test.shape) * (np.sum(y) / len(y))
-
-    clf_score       = metrics.log_loss(y_test, y_pred)
-    baseline_score  = metrics.log_loss(y_test, y_baseline)
-    never_score     = metrics.log_loss(y_test, np.zeros(y_test.shape))
-    always_score    = metrics.log_loss(y_test, np.ones(y_test.shape))
-
-    print("log-loss score of classifier: "  + str(clf_score))
-    print("log-loss score of baseline: "    + str(baseline_score))
-    print("log-loss score of never: "       + str(never_score))
-    print("log-loss score of always: "      + str(always_score))
-
-    clf_score       = metrics.brier_score_loss(y_test, y_pred[:, 1])
-    baseline_score  = metrics.brier_score_loss(y_test, y_baseline)
-    never_score     = metrics.brier_score_loss(y_test, np.zeros(y_test.shape))
-    always_score    = metrics.brier_score_loss(y_test, np.ones(y_test.shape))
-
-    print("Brier loss of classifier: "  + str(clf_score))
-    print("Brier loss of baseline: "    + str(baseline_score))
-    print("Brier loss of never: "       + str(never_score))
-    print("Brier loss of always: "      + str(always_score))
-
-    clf_score       = metrics.roc_auc_score(y_test, y_pred[:, 1])
-    baseline_score  = metrics.roc_auc_score(y_test, y_baseline)
-    never_score     = metrics.roc_auc_score(y_test, np.zeros(y_test.shape))
-    always_score    = metrics.roc_auc_score(y_test, np.ones(y_test.shape))
-
-    print("ROC AUC of classifier: "  + str(clf_score))
-    print("ROC AUC score of baseline: "    + str(baseline_score))
-    print("ROC AUC score of never: "       + str(never_score))
-    print("ROC AUC score of always: "      + str(always_score))
+    print("\nTrain\n-----")
+    y_pred = clf.predict_proba(X_train)
+    y_baseline = np.ones(y_train.shape) * (np.sum(y) / len(y))
+    print_metrics(y_train, y_pred[:, 1], y_baseline)
 
 
     print("program complete")
