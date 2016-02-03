@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-# from sklearn import linear_model
-# from sklearn import cross_validation
+from sklearn import linear_model
+from sklearn import cross_validation
 from sklearn import metrics
 from os import listdir
 import pickle
@@ -290,14 +290,16 @@ def vectorize_data(df):
                 "WeekDay",
                 "YearDay"]
 
+    df = df.dropna()
+
     Xenc = OneHotEncoder()
 
-    X1 = df.as_matrix(con_vars)
-    X2 = Xenc.fit_transform(df.as_matrix(cat_vars))
+    X1 = df[con_vars].as_matrix()
+    X2 = Xenc.fit_transform(df[cat_vars].as_matrix())
 
     X = sparse.hstack((X1, X2))
 
-    y = df.as_matrix(["Cancelled"])
+    y = df["Cancelled"].as_matrix()
 
     return X, y
 
@@ -318,9 +320,20 @@ def main():
     print("X shape: " + str(X.shape))
     print("y shape: " + str(y.shape))
 
+    clf = linear_model.LogisticRegression(penalty='l2', verbose=True)
 
+    X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, train_size=0.7)
+
+    clf.fit(X_train, y_train)
+
+    y_pred = clf.predict_proba(X_test)
+
+    score = metrics.log_loss(y_test, y_pred)
+
+    print("log-loss score: " + str(score))
 
     print("program complete")
+
 
 
 if __name__ == '__main__':
