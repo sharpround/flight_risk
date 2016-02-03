@@ -88,21 +88,24 @@ def get_continuous_vars():
 
 
 
-def read_all_csv(filenames, usecols=None, dtype_dict=None):
-    df_list = []
+def read_all_csv(filenames, usecols=None, dtype_dict=None, verbose=False, frac=1.0):
 
     if type(filenames) is not list:
         print("function read_all_csv requires the input to be a list of filenames")
         return None # TODO: return appropriate error message
 
+    df = pd.DataFrame()
     for fname in filenames:
+        if verbose:
+            print("loading " + fname)
         tmp_df = pd.read_csv(ONTIME_PATH + fname,
                              usecols=usecols,
                              header=0,
                              dtype=dtype_dict
                              )
-        df_list.append(tmp_df)
-    df = pd.concat(df_list)
+
+        df = df.append(tmp_df.sample(frac=frac))
+
     return df
 
 
@@ -172,7 +175,7 @@ def main():
     filenames = get_filenames(ONTIME_PATH)
     usecols = get_data_columns()
 
-    filenames = [filenames[45]]
+    filenames = filenames[48:60]
 
     print("files to load: " + str(filenames))
     print("columns to import: " + str(usecols))
@@ -180,9 +183,12 @@ def main():
     # test_file = "on_time/On_Time_On_Time_Performance_2013_11.csv"
 
     df = read_all_csv(filenames,
-                     usecols=usecols,
-                     dtype_dict=get_dtype_dict()
-                     )
+                      usecols=usecols,
+                      dtype_dict=get_dtype_dict(),
+                      verbose=True,
+                      frac=0.1
+                      )
+
 
     ### encode categorical features
 
@@ -203,6 +209,8 @@ def main():
     df = make_day_of_week_feature(df, "FlightDate")
 
     df = make_day_of_year_feature(df, "FlightDate")
+
+    ### normalize features
 
     continuous_vars = get_continuous_vars()
     for var in continuous_vars:
