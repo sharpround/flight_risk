@@ -5,6 +5,8 @@ import numpy as np
 from sklearn import metrics
 from os import listdir
 import pickle
+from scipy import sparse
+from sklearn.preprocessing import OneHotEncoder
 
 ONTIME_PATH = "on_time/"
 TICKET_PATH = "bts-db1b/DB1B/"
@@ -262,11 +264,60 @@ def preprocess_ontime_data(verbose=True):
     return df, transformer_dict
 
 
-def main():
-    df, transformer_dict = preprocess_ontime_data()
+def plot_learning_curve(clf, X_train, X_test, y_train, y_test):
+    pass
 
-    pickle.dump(df, open("ontime_sample_01.pickle", "wb"))
-    pickle.dump(transformer_dict, open("transformer_dict_01.pickle", "wb"))
+
+def vectorize_data(df):
+
+    cat_vars = ["UniqueCarrier",
+                "OriginAirportID",
+                "OriginAirportSeqID",
+                "OriginCityMarketID",
+                "OriginState",
+                "DestAirportID",
+                "DestAirportSeqID",
+                "DestCityMarketID",
+                "DepTimeBlk",
+                "ArrTimeBlk",
+                "DistanceGroup",
+                "DestState"]
+
+    con_vars = ["CRSElapsedTime",
+                "Distance",
+                "CRSDepTime",
+                "CRSArrTime",
+                "WeekDay",
+                "YearDay"]
+
+    Xenc = OneHotEncoder()
+
+    X1 = df.as_matrix(con_vars)
+    X2 = Xenc.fit_transform(df.as_matrix(cat_vars))
+
+    X = sparse.hstack((X1, X2))
+
+    y = df.as_matrix(["Cancelled"])
+
+    return X, y
+
+
+
+def main():
+    # df, transformer_dict = preprocess_ontime_data()
+    #
+    # print("saving dataset to disk")
+    # pickle.dump(df, open("ontime_sample_01.pickle", 'wb'))
+    # pickle.dump(transformer_dict, open("transformer_dict_01.pickle", 'wb'))
+
+    df = pickle.load(open("ontime_sample_01.pickle", 'rb'))
+    transformer_dict = pickle.load(open("transformer_dict_01.pickle", 'rb'))
+
+    X, y = vectorize_data(df)
+
+    print("X shape: " + str(X.shape))
+    print("y shape: " + str(y.shape))
+
 
 
     print("program complete")
