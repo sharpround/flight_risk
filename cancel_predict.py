@@ -329,15 +329,15 @@ def vectorize_data(df):
 
     Xenc = OneHotEncoder()
 
-    X1 = df[con_vars].as_matrix()
-    X2 = Xenc.fit_transform(df[cat_vars].as_matrix())
+    X1 = Xenc.fit_transform(df[cat_vars].as_matrix())
+    X2 = df[con_vars].as_matrix()
 
     X = sparse.hstack((X1, X2))
     X = X.tocsr()
 
     y = df["Cancelled"].as_matrix()
 
-    return X, y
+    return X, y, Xenc
 
 
 
@@ -386,7 +386,7 @@ def main():
     # pickle.dump(transformer_dict, open("transformer_dict_01.pickle", 'wb'))
 
     df = pickle.load(open("ontime_sample_01.pickle", 'rb'))
-    transformer_dict = pickle.load(open("transformer_dict_01.pickle", 'rb'))
+    # transformer_dict = pickle.load(open("transformer_dict_01.pickle", 'rb'))
 
     df = df.sort_values(by="OrdinalDate")
 
@@ -421,7 +421,7 @@ def main():
 
     print("Training random forest classifier....")
 
-    clf = ensemble.RandomForestClassifier(verbose=True, n_jobs=-1)
+    clf = ensemble.RandomForestClassifier(verbose=True, n_jobs=2)
     clf.fit(X_train, y_train)
 
     print("\nTest")

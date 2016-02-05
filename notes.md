@@ -8,7 +8,7 @@ Those predictions need to be tied to each individual airport or flight.
 
 
 To price a RG (rebook guarantee), what do you need?
-* extreme weather values (probabilities) at all airports 
+* extreme weather values (probabilities) at all airports
   - either by finding all the extreme weather in the country/world and then finding the impact on an airport/route, or by going through each airport/route and checking the weather...
   - what qualifies as "extreme weather"--what causes minor delays, what causes major delays (>4 hr), what causes cancellations (any different than just a major delay, from a Freedbird POV?), and what causes systemic cancellations (would make rebooking *much* more difficult and expensive?)
 * what is the cost of rebooking
@@ -40,63 +40,68 @@ How to get the rebooking price from the origin/destination survey data?
 How do we add weather into that?
 Can we use this data to identify "low-performing" planes?
 
-
 Reasons for delay start in 2003-06.
 
 Reasons for gate return starts in 2008-10
 
 
-todo:
-stuff the data into a database
+## results
+* logistic regression trains up something that is better than random (ROC AUC = 0.65 or so)
+* if we cross-validate with time-contiguous samples, then the ROC AUC does not change significantly
+* scikit-learn default random forest *massively* overtrains
 
+
+## todo:
+* TODO: stuff the data into a database
+* TODO: test the
 
 
 ## Features, X:
 Many of the features here are redundant. They should be condensed before modeling.
 
 #### Time Period
-Year  Year   
+Year  Year
 Quarter Quarter (1-4) Analysis
 Month Month Analysis
-DayofMonth  Day of Month   
+DayofMonth  Day of Month
 DayOfWeek Day of Week Analysis
 **FlightDate**  Flight Date (yyyymmdd)
 
 #### Airline
 **UniqueCarrier** Unique Carrier Code. When the same code has been used by multiple carriers, a numeric suffix is used for earlier users, for example, PA, PA(1), PA(2). Use this field for analysis across a range of years. Analysis
 AirlineID An identification number assigned by US DOT to identify a unique airline (carrier). A unique airline (carrier) is defined as one holding and reporting under the same DOT certificate regardless of its Code, Name, or holding company/corporation. Analysis
-Carrier Code assigned by IATA and commonly used to identify a carrier. As the same code may have been assigned to different carriers over time, the code is not always unique. For analysis, use the Unique Carrier Code.  
-*TailNum* Tail Number  
-FlightNum Flight Number  
+Carrier Code assigned by IATA and commonly used to identify a carrier. As the same code may have been assigned to different carriers over time, the code is not always unique. For analysis, use the Unique Carrier Code.
+*TailNum* Tail Number
+FlightNum Flight Number
 
 #### Origin
 **OriginAirportID** Origin Airport, Airport ID. An identification number assigned by US DOT to identify a unique airport. Use this field for airport analysis across a range of years because an airport can change its airport code and airport codes can be reused. Analysis
-**OriginAirportSeqID**  Origin Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time. Airport attributes, such as airport name or coordinates, may change over time.   
+**OriginAirportSeqID**  Origin Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time. Airport attributes, such as airport name or coordinates, may change over time.
 **OriginCityMarketID**  Origin Airport, City Market ID. City Market ID is an identification number assigned by US DOT to identify a city market. Use this field to consolidate airports serving the same city market. Analysis
 Origin  Origin Airport  Analysis
-OriginCityName  Origin Airport, City Name  
+OriginCityName  Origin Airport, City Name
 **OriginState** Origin Airport, State Code  Analysis
 OriginStateFips Origin Airport, State Fips  Analysis
-OriginStateName Origin Airport, State Name   
+OriginStateName Origin Airport, State Name
 OriginWac Origin Airport, World Area Code Analysis
 
 #### Destination
 **DestAirportID** Destination Airport, Airport ID. An identification number assigned by US DOT to identify a unique airport. Use this field for airport analysis across a range of years because an airport can change its airport code and airport codes can be reused.  Analysis
-**DestAirportSeqID**  Destination Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time. Airport attributes, such as airport name or coordinates, may change over time.  
+**DestAirportSeqID**  Destination Airport, Airport Sequence ID. An identification number assigned by US DOT to identify a unique airport at a given point of time. Airport attributes, such as airport name or coordinates, may change over time.
 **DestCityMarketID**  Destination Airport, City Market ID. City Market ID is an identification number assigned by US DOT to identify a city market. Use this field to consolidate airports serving the same city market.  Analysis
 Dest  Destination Airport Analysis
-DestCityName  Destination Airport, City Name   
+DestCityName  Destination Airport, City Name
 **DestState** Destination Airport, State Code Analysis
 DestStateFips Destination Airport, State Fips Analysis
-DestStateName Destination Airport, State Name  
+DestStateName Destination Airport, State Name
 DestWac Destination Airport, World Area Code  Analysis
 
 #### Departure Performance
-**CRSDepTime**  CRS Departure Time (local time: hhmm)  
+**CRSDepTime**  CRS Departure Time (local time: hhmm)
 **DepTimeBlk**  CRS Departure Time Block, Hourly Intervals  Analysis
 
 #### Arrival Performance
-**CRSArrTime**  CRS Arrival Time (local time: hhmm)  
+**CRSArrTime**  CRS Arrival Time (local time: hhmm)
 **ArrTimeBlk**  CRS Arrival Time Block, Hourly Intervals  Analysis
 
 #### Flight Summaries
